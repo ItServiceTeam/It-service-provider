@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en" style="height: 100%;" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IT SERVICE PROVIDER</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="css/commonStyle.css">
+    <script src="./itServiceProviderLogin.js"></script>
+    <style>
+        .bg-img-cls {
+            background-position: center;
+            background-repeat: no-repeat;
+            background-size: cover;
+        }
+
+        .full-height-cls {
+            height: 100%;
+        }
+
+        .login-form-div-cls {
+            padding-top: 9%;
+        }
+
+        .login-form-cls {
+            padding: 10px;
+            border-radius: 9px;
+        }
+
+        .text-navyblue {
+            color: #03132e;
+        }
+
+        .bg-navyblue {
+            background-color: #03132e;
+        }
+    </style>
+</head>
+
+<body style="height: 100%;">
+    <div class="container row col-md-12" style="height: 100%;">
+        <div class="col-md-8 p-0">
+            <img src="./backWall.jpg" alt="" style="width: 100%;height: 100%;">
+        </div>
+        <div class="col-md-4 " style="margin-top: 110px;">
+            <form class="shadow login-form-cls bg-white">
+                <div class="form-group">
+                    <label for="email"><i class="fa fa-at"></i> Email</label>
+                    <input type="email" class="form-control" id="emailId" placeholder="" name="email">
+                </div>
+                <div class="form-group">
+                    <label for="pwd"><i class="fa fa-lock"></i> Password</label>
+                    <input type="password" class="form-control" id="pwdId" placeholder="" name="pswd">
+                </div>
+                <button type="button" class="btn btn-primary btn-block text-white" onclick="loginUser()">Sign
+                    In</button>
+                <div class="form-group mt-2" style="text-align: center;">
+                    <label class="form-check-label">
+                        <a type="button" class="text-primary" data-toggle="modal" data-target="#regModelId">Sign Up</a>
+                        if don't have an account
+                    </label>
+                </div>
+            </form>
+        </div>
+    </div>
+    <!-- Registration Model -->
+    <div class="modal fade" id="regModelId">
+        <div class="modal-dialog" style="max-width: 750px!important;">
+            <div class="modal-content">
+
+                <!-- Modal Header -->
+                <div class="modal-header bg-primary">
+                    <h4 class="modal-title text-white">Sign Up</h4>
+                    <button type="button" class="close" data-dismiss="modal">×</button>
+                </div>
+
+                <!-- Modal body -->
+                <div class="modal-body">
+                    <form>
+                        <h4>Basic Details</h4>
+                        <hr>
+                        <div class="form-row">
+                            <div class="col-md-6 mb-3">
+                                <label>Email</label>
+                                <input type="email" class="form-control" id="userEmailId" value="" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="contactId">Contact no.</label>
+                                <input type="number" class="form-control" id="contactId" required>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="passwordId">Create Password</label>
+                                <input type="password" class="form-control" id="passwordId" required>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="col-md-6 mb-3">
+                                    <label for="validationDefaultUsername">User Type</label>
+                                    <div class="form-check">
+                                        <label class="form-check-label">
+                                            <input type="radio" class="form-check-input" name="userTypeRadio"
+                                                value="Customer">Customer
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <label class="form-check-label">
+                                            <input type="radio" class="form-check-input" name="userTypeRadio"
+                                                value="Company">Company
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="companyDivId">
+                            <h4>Company Details</h4>
+                            <hr>
+                            <div class="form-row">
+                                <div class="col-md-6 mb-3">
+                                    <label>Company Name</label>
+                                    <input type="text" class="form-control" id="companyName" value="" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label>Registration no.</label>
+                                    <input type="text" class="form-control" id="companyRegNo" value="" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label>Location(map)</label>
+                                    <input type="text" class="form-control" id="locationId" value="" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="customerDivId">
+                            <h4>Customer Details</h4>
+                            <hr>
+                            <div class="form-row">
+                                <div class="col-md-6 mb-3">
+                                    <label>Customer Name</label>
+                                    <input type="text" class="form-control" id="customerName" value="" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="addressId">Address</label>
+                                    <textarea id="addressId" class="form-control"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <!-- Modal footer -->
+                <div class="modal-footer">
+                    <button type="reset" class="border btn btn-light" data-dismiss="modal">Close</button>
+                    <button type="button" class="border btn btn-primary text-white"
+                        onclick="registerUser()">Submit</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
