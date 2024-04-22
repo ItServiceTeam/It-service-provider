@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.9/angular.min.js"></script>
+<title>IT SERVICE PROVIDER</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/1.3.2/jspdf.min.js"></script>
+<script src="./itServiceProvider.js"></script>
+<style>
+    .badge {
+        position: absolute;
+        font-size: xx-small;
+        margin-left: -5px;
+        margin-top: -10px;
+        background-color: red;
+        color: white;
+    }
+
+    .bg-primary {
+        background-color: #3d6fa5 !important;
+    }
+
+    .btn-primary {
+        background-color: #3d6fa5 !important;
+    }
+</style>
+
+<body ng-app="myApp" ng-controller="myCtrl" ng-init="onload();" style="font-family: fangsong;">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <img src="./logo.jpg" alt="" style="height: 54px;">
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarText"
+            aria-controls="navbarText" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarText">
+            <ul class="navbar-nav mr-auto">
+                <li class="nav-item active menuCls" ng-if="loginUserType == 'COMPANY'" id="serviceTabId"
+                    menuType="SERVICE">
+                    <a class="nav-link" href="#" ng-click="switchMenu('SERVICE','serviceTabId')">Service</a>
+                </li>
+                <li class="nav-item active menuCls" ng-if="loginUserType != 'COMPANY'" id="viewCompanyTabId"
+                    menuType="VIEW-COMPANY">
+                    <a class="nav-link" href="#" ng-click="switchMenu('VIEW-COMPANY','viewCompanyTabId')">View
+                        companies</a>
+                </li>
+                <li class="nav-item menuCls" id="viewApplicantTabId" menuType="VIEW-APPLICANT">
+                    <a class="nav-link" href="#" ng-click="switchMenu('VIEW-APPLICANT','viewApplicantTabId')">
+                        {{loginUserType == 'COMPANY'?'View Applicant':'Your Applications'}}</a>
+                </li>
+                <li class="nav-item menuCls" id="comunicationTabId" menuType="COMMUNICATION">
+                    <a class="nav-link" href="#" ng-click="switchMenu('COMMUNICATION','comunicationTabId')">
+                        Communication</a>
+                </li>
+                <li class="nav-item menuCls" ng-if="loginUserType == 'COMPANY'" id="viewServiceSummaryTabId"
+                    menuType="VIEW-SERVICE-SUMMARY">
+                    <a class="nav-link" href="#"
+                        ng-click="switchMenu('VIEW-SERVICE-SUMMARY','viewServiceSummaryTabId')">
+                        View Service Summary</a>
+                </li>
+                <li class="nav-item menuCls" id="viewFeedBackTabId" menuType="VIEW-FEED-BACK">
+                    <a class="nav-link" href="#" ng-click="switchMenu('VIEW-FEED-BACK','viewFeedBackTabId')">Feed
+                        Back</a>
+                </li>
+            </ul>
+            <!-- Default dropleft button -->
+
+            <span class="navbar-text" style="cursor: pointer;">
+                <i class="fa fa-sign-out" style="font-size: 18px; color: white;" ng-click="logout()"
+                    title="Sign Out"></i>
+            </span>
+        </div>
+    </nav>
+    <!-- SERVICE ADD/EDIT/DELETE -->
+    <div id="serviceDetailsDiv">
+        <div class="float-right">
+            <button title="Add" data-toggle="modal" data-target="#serviceAddEditModelId" ng-click="isAddService(true)"
+                class="btn btn-primary"><i class="fa fa-plus"></i></button>
+            <button data-toggle="modal" ng-disabled="!isEdit" data-target="#serviceAddEditModelId" title="Edit"
+                class="btn btn-primary"><i class="fa fa-edit"></i></button>
+            <button title="Remove" ng-disabled="!isEdit" class="btn btn-primary" ng-click="removeService()"><i
+                    class="fa fa-trash"></i></button>
+        </div>
+        <!--  -->
+        <!-- SERVICE ADD/EDIT Model -->
+        <div class="modal fade" id="serviceAddEditModelId">
+            <div class="modal-dialog" style="max-width: 750px!important;">
+                <div class="modal-content">
+                    <!-- Modal Header -->
+                    <div class="modal-header bg-primary">
+                        <h4 class="modal-title text-white">{{ isEdit ? 'Edit' : 'Add'}}</h4>
+                        <button type="button" class="close" data-dismiss="modal">×</button>
+                    </div>
+                    <!-- Modal body -->
+                    <div class="modal-body">
+                        <form>
+                            <div class=" form-row col-md-12">
+                                <div class="col-md-6 mb-3">
+                                    <label>Service Name</label>
+                                    <input type="text" class="form-control" ng-model="serviceData.serviceName"
+                                        id="serviceNameId" value="">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label>Service Charges</label>
+                                    <input type="text" class="form-control" ng-model="serviceData.serviceCharges"
+                                        id="serviceChargesId" value="">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="contactId">Service Type</label>
+                                    <input type="text" class="form-control" ng-model="serviceData.serviceType"
+                                        id="serviceTypeId" required>
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label for="descriptionId">Description</label>
+                                    <textarea class="form-control" ng-model="serviceData.description"
+                                        id="descriptionId"></textarea>
+                                </div>
+
+                            </div>
+                        </form>
+                    </div>
+                    <!-- Modal footer -->
+                    <div class="modal-footer">
+                        <button type="reset" class="border btn btn-light" data-dismiss="modal">Close</button>
+                        <button type="button" class="border btn btn-primary text-white"
+                            ng-click="serviceAddEdit()">Submit</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <table class="table">
+            <thead class="bg-primary">
+                <tr>
+                    <th scope="col">Service Name</th>
+                    <th scope="col">Service Charges</th>
+                    <th scope="col">Service Type</th>
+                    <th scope="col">Description</th>
+                    <th scope="col" ng-if="loginUserType =='COMPANY'">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr ng-repeat="data in viewServiceData">
+                    <td scope="col">{{data.serviceName}}</td>
+                    <td scope="col">{{data.serviceCharges}}</td>
+                    <td scope="col">{{data.serviceType}}</td>
+                    <td scope="col">{{data.description}}</td>
+                    <td scope="col" ng-if="loginUserType =='COMPANY'">
+                        <div>
+                            <input title="Select" type="checkbox" class="form-check-input edit-check-cls"
+                                ng-click="editServiceDetails($event, data)">
+
+                        </div>
+
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Company details and apply service -->
+    <div id="appliedServiceDiv">
+        <table class="table" style="min-height: 150px;">
+            <thead class="bg-primary">
+                <tr>
+                    <th scope="col">Company Name</th>
+                    <th>Contact No.</th>
+                    <th>Email</th>
+                    <th scope="col">Location(map)</th>
+                    <th scope="col">Services</th>
+                    <th scope="col">Question</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr ng-repeat="data in companyList">
+                    <td scope="col">{{data.companyName}}</td>
+                    <td>{{data.contactNum}}</td>
+                    <td>{{data.emailId}}</td>
+                    <td scope="col"><a href="{{data.locationId}}" target="_blank">get location</a></td>
+                    <td scope="col"><i style="cursor: pointer;" class="fa fa-eye" title="View Services"
+                            ng-click="gtServiceDetailsData(data)"></i></td>
+                    <td scope="col">
+                        <div style="display: flex;">
+                            <input type="text" class="form-control" id="questionBoxId-{{$index}}"
+                                placeholder="Enter your queries">
+                            <button class="btn btn-primary btn-sm ml-1 float-right"
+                                ng-click="askQuestions(data, $index)">Submit</button>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <table class="table">
+            <thead class="bg-primary">
+                <tr>
+                    <th scope="col">Service Name</th>
+                    <th scope="col">Service Charges(per month)</th>
+                    <th scope="col">Service Type</th>
+                    <th scope="col">Description</th>
+                    <th scope="col" ng-if="loginUserType !='COMPANY'">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr ng-repeat="data in viewServiceData">
+                    <td scope="col">{{data.serviceName}}</td>
+                    <td scope="col">{{data.serviceCharges}}</td>
+                    <td scope="col">{{data.serviceType}}</td>
+                    <td scope="col">{{data.description}}</td>
+                    <td scope="col">
+                        <div>
+                            <button class="btn btn-primary" ng-click="selectedApplyService(data)" data-toggle="modal"
+                                data-target="#applyServiceModalId">Apply</button>
+                        </div>
+
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <div class=" modal fade" id="applyServiceModalId">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <!-- Modal Header -->
+                    <div class="modal-header bg-primary">
+                        <h4 class="modal-title">Apply</h4>
+                        <button type="button" class="close" data-dismiss="modal">×</button>
+                    </div>
+                    <!-- Modal body -->
+                    <div class="modal-body">
+                        <form>
+                            <div class=" form-row col-md-12">
+                                <div class="col-md-6 mb-3">
+                                    <label>Service Name</label>
+                                    <input type="text" class="form-control" readonly ng-model="serviceData.serviceName"
+                                        value="">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label>Service Charges/month</label>
+                                    <input type="text" class="form-control" readonly
+                                        ng-model="serviceData.serviceCharges" value="">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="contactId">Service Type</label>
+                                    <input type="text" class="form-control" readonly ng-model="serviceData.serviceType"
+                                        required>
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label for="descriptionId">Description</label>
+                                    <textarea class="form-control" readonly
+                                        ng-model="serviceData.description"></textarea>
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label>Active Date</label>
+                                    <input class="form-control" type="date" id="startDate"
+                                        ng-model="serviceData.startDate" />
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label>Expire Date</label>
+                                    <input class="form-control" type="date" id="endDate"
+                                        ng-model="serviceData.endDate" />
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label>Total Cost</label>
+                                    <input class="form-control" type="number" id="costId" readonly
+                                        ng-model="serviceData.cost" />
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-primary" ng-click="applyService()">Apply</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    <!-- Communication -->
+    <div id="comunicationDivId">
+        <div ng-repeat="data in queriesList">
+            <span ng-if="loginUserType =='COMPANY'">{{data.customerDetails.customerName}}</span><br>
+            <span ng-if="loginUserType !='COMPANY'">{{data.companyDetails.companyName}}</span><br>
+            <strong>Q: {{data.question}}</strong><br>
+            <span> <strong>A: </strong>{{data.answer}}</span>
+            <div style="display: flex; width: 50%;" ng-if="loginUserType =='COMPANY'">
+                <input type="text" class="form-control ml-2" id="answerBoxId-{{$index}}"
+                    placeholder="Enter your answer">
+                <button class="btn btn-primary btn-sm ml-1 float-right"
+                    ng-click="answerUpdate(data, $index)">Submit</button>
+            </div>
+            <br>
+            <hr>
+        </div>
+    </div>
+    <!-- Feed Back -->
+    <div id="feedBackDivId">
+
+        <div>
+            <table class="table">
+                <thead class="bg-primary">
+                    <tr>
+                        <th scope="col">User Name</th>
+                        <th scope="col" ng-if="loginUserType !='COMPANY'">Company Name</th>
+                        <th scope="col">Comment</th>
+                        <th scope="col">Rating out of 5</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr ng-repeat="data in feedBackList">
+                        <td scope="col">{{data.details.customerDetails.customerName}}</td>
+                        <td scope="col" ng-if="loginUserType !='COMPANY'">{{data.details.companyDetails.companyName}}
+                        </td>
+                        <td scope="col">{{data.feedback}}</td>
+                        <td scope="col">{{data.rating}}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <hr>
+        <div ng-repeat="data in queriesList" ng-if="loginUserType !='COMPANY'">
+            <strong ng-if="loginUserType !='COMPANY'">{{data.companyDetails.companyName}}</strong><br>
+            <div class="row" ng-if="loginUserType !='COMPANY'">
+                <div class="col-md-6">
+                    <label for="">Comment</label>
+                    <textarea type="text" class="form-control ml-2" id="feedbackBoxId-{{$index}}"
+                        placeholder="Enter your feedback"></textarea>
+                </div>
+                <div class="col-md-6">
+                    <label for="">Rating</label>
+                    <select id="ratingId-{{$index}}" class="form-control">
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                    </select>
+                </div>
+                <div class="col-md-1"><button class="btn btn-primary btn-sm mt-2 float-right"
+                        ng-click="feedBack(data, $index)">Submit</button>
+                </div>
+            </div>
+            <hr>
+        </div>
+
+    </div>
+    <!-- APPLIED SERVICE -->
+    <div id="applicationsDiv">
+        <table class="table">
+            <thead class="bg-primary">
+                <tr>
+                    <th scope="col" ng-if="loginUserType !='COMPANY'">Company Name</th>
+                    <th scope="col" ng-if="loginUserType =='COMPANY'">User Name</th>
+                    <th scope="col">Service Name</th>
+                    <th scope="col">Service Charges(per month)</th>
+                    <th scope="col">cost</th>
+                    <th scope="col">Active Date</th>
+                    <th scope="col">Expire Date</th>
+                    <th scope="col">Service Type</th>
+                    <th scope="col">Description</th>
+                    <th scope="col">Request</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr ng-repeat="data in viewAppliedServiceData">
+                    <td scope="col" ng-if="loginUserType !='COMPANY'">{{data.companyData.companyName}}</td>
+                    <td scope="col" ng-if="loginUserType =='COMPANY'">{{data.userData.customerName}}</td>
+                    <td scope="col">{{data.serviceData.serviceName}}</td>
+                    <td scope="col">{{data.serviceData.serviceCharges}}</td>
+                    <td scope="col">{{data.cost}}</td>
+                    <td scope="col">{{data.serviceData.startDate.split('T')[0]}}</td>
+                    <td scope="col">{{data.serviceData.endDate.split('T')[0]}}</td>
+                    <td scope="col">{{data.serviceData.serviceType}}</td>
+                    <td scope="col">{{data.serviceData.description}}</td>
+                    <td scope="col" ng-if="loginUserType !='COMPANY'">
+                        <div ng-if="data.requestStatus === 'Accepted'">
+                            <button class="btn btn-primary btn-sm" ng-click="acceptRejectPayment(data,'PAY')"
+                                title="Pay">Pay</button>
+                        </div>
+                        <span ng-if="data.requestStatus != 'Accepted'">{{data.requestStatus =='Accepted' ? 'Payment
+                            pending' : data.requestStatus}}</span>
+                    </td>
+                    <td scope="col" ng-if="loginUserType =='COMPANY'">
+                        <div ng-if="data.requestStatus === 'Pending'">
+                            <button class="btn btn-success btn-sm" ng-click="acceptRejectPayment(data,'ACCEPT')"
+                                title="Accept"><i class="fa fa-check"></i></button>
+                            <button class="btn btn-danger btn-sm" ng-click="acceptRejectPayment(data,'REJECT')"
+                                title="Reject"><i class="fa fa-close"></i></button>
+                        </div>
+                        <span ng-if="data.requestStatus != 'Pending'">{{data.requestStatus =='Accepted' ? 'Payment
+                            pending' : data.requestStatus}}</span>
+                    </td>
+
+                </tr>
+            </tbody>
+        </table>
+
+    </div>
+    <!-- VIEW SERVICE SUMMARY -->
+    <div id="viewServiceSummaryDiv">
+        <div class="col-md-6 m-2">
+            <label for="">Filter</label>
+            <select class="form-control" ng-model="search" ng-change="filter(search)">
+                <option value="ALL">All</option>
+                <option value="ACTIVE">Active</option>
+                <option value="EXPIRED">Expired</option>
+                <option value="UPCOMMING">Upcomming</option>
+            </select>
+        </div>
+        <table class="table">
+            <thead class="bg-primary">
+                <tr>
+
+                    <th scope="col">User Name</th>
+                    <th scope="col">Service Name</th>
+                    <th scope="col">Service Charges(per month)</th>
+                    <th scope="col">cost</th>
+                    <th scope="col">Active Date</th>
+                    <th scope="col">Expire Date</th>
+                    <th scope="col">Service Type</th>
+                    <th scope="col">Description</th>
+                    <th scope="col">Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr ng-repeat="data in viewAppliedServiceSummeryFilterData">
+                    <td scope="col">{{data.userData.customerName}}</td>
+                    <td scope="col">{{data.serviceData.serviceName}}</td>
+                    <td scope="col">{{data.serviceData.serviceCharges}}</td>
+                    <td scope="col">{{data.cost}}</td>
+                    <td scope="col">{{data.serviceData.startDate.split('T')[0]}}</td>
+                    <td scope="col">{{data.serviceData.endDate.split('T')[0]}}</td>
+                    <td scope="col">{{data.serviceData.serviceType}}</td>
+                    <td scope="col">{{data.serviceData.description}}</td>
+                    <td scope="col">{{data.subscribeStatus}}</td>
+                </tr>
+            </tbody>
+        </table>
+
+    </div>
+</body>
+
+</html>
