@@ -5,61 +5,61 @@ app.controller('myCtrl', function ($scope, $http) {
     }
     $scope.isEligible = false;
     $scope.notificationCount = 0;
-    $scope.schemeData = {};
+    $scope.serviceData = {};
     $scope.userName = localStorage.getItem("userName");
-    $scope.currentUserDetails = localStorage.getItem("userDetails");
+    $scope.currentUserDetails = localStorage.getItem("userData");
     $scope.loginUserType = localStorage.getItem("userType");
     $scope.currentUserDetails = JSON.parse($scope.currentUserDetails);
     $scope.imgBase64Data = '';
     $scope.schemeSubscriber = [];
-    const URL = "https://fir-1c7de-default-rtdb.firebaseio.com/govtScheme";
+    const URL = "https://fir-1c7de-default-rtdb.firebaseio.com/itServiceProvider";
     $scope.onload = function () {
-        getSchemeDetailsData();
-        $("#schemeDetailsDiv").hide();
-        $("#appliedSchemeDiv").hide();
-        $("#schemeSubscriberDiv").hide();
+        $scope.gtServiceDetailsData("ADMIN");
+        $("#appliedServiceDiv").hide();
+        $("#serviceDetailsDiv").hide();
+        $("#viewCompanyDiv").hide();
+        $("#comunicationDivId").hide();
+        $("#feedBackDivId").hide();
+        $("#applicationsDiv").hide();
+        $("#viewServiceSummaryDiv").hide();
         $('#startDate').attr('min', new Date().toISOString().split('T')[0]);
         $('#endDate').attr('min', new Date().toISOString().split('T')[0]);
         if ($scope.loginUserType != 'COMPANY') {
-            getNotication();
+            getCompanyList();
+            $("#appliedServiceDiv").show();
+        } else {
+            $("#serviceDetailsDiv").show();
         }
     }
 
-    $scope.addEditScheme = function () {
-        if (checkIsNull($scope.schemeData.schemeName) ||
-            checkIsNull($scope.schemeData.anualIncome) ||
-            checkIsNull($scope.schemeData.minimumAge) ||
-            checkIsNull($scope.schemeData.maximumAge) ||
-            checkIsNull($scope.schemeData.startDate) ||
-            checkIsNull($scope.schemeData.endDate) ||
-            checkIsNull($scope.schemeData.applicableFor) ||
-            checkIsNull($scope.schemeData.description)) {
+    $scope.serviceAddEdit = function () {
+        if (checkIsNull($scope.serviceData.serviceName) ||
+            checkIsNull($scope.serviceData.serviceCharges) ||
+            checkIsNull($scope.serviceData.serviceType) ||
+            checkIsNull($scope.serviceData.description)) {
             alert("Please fill all mandtory fields")
             return false;
         } else {
 
             let method_type = 'post';
-            let http_url = URL + '/schemeDataList.json';
+            let http_url = URL + '/serviceDataList/' + $scope.currentUserDetails.userId + '/.json';
             if ($scope.isEdit) {
-                delete $scope.schemeData["$$hashKey"];
+                delete $scope.serviceData["$$hashKey"];
                 method_type = 'patch';
-                http_url = URL + '/schemeDataList/' + $scope.schemeData.schemeId + '.json';
+                http_url = URL + '/serviceDataList/' + $scope.currentUserDetails.userId + '/' + $scope.serviceData.serviceId + '.json';
             }
-            $scope.schemeData.startDate = $("#startDate").val();
-            $scope.schemeData.endDate = $("#endDate").val();
             $.ajax({
                 type: method_type,
                 contentType: "application/json",
                 dataType: 'json',
                 cache: false,
                 url: http_url,
-                data: JSON.stringify($scope.schemeData),
+                data: JSON.stringify($scope.serviceData),
                 success: function (response) {
-                    getSchemeDetailsData();
+                    $scope.gtServiceDetailsData("ADMIN");
                     alert("operation completed sucessfully!!!");
-                    $scope.schemeData = {};
-                    $("#startDate").val("");
-                    $("#endDate").val("");
+                    $scope.serviceData = {};
+                    $('#serviceAddEditModelId').modal('hide');
                 }, error: function (error) {
                     alert("Something went wrong");
                 }
@@ -67,21 +67,28 @@ app.controller('myCtrl', function ($scope, $http) {
         }
     }
 
-    function getSchemeDetailsData() {
-        $scope.viewSchemeData = [];
+    $scope.gtServiceDetailsData = function (data) {
+        let url = "";
+        if (data == 'ADMIN') {
+            url = URL + "/serviceDataList/" + $scope.currentUserDetails.userId + "/.json";
+        } else {
+            $scope.selectedComapnyDetails = data;
+            url = URL + "/serviceDataList/" + data.userId + "/.json";
+        }
+        $scope.viewServiceData = [];
         $scope.isEdit = false;
         $.ajax({
             type: 'get',
             contentType: "application/json",
             dataType: 'json',
             cache: false,
-            url: URL + "/schemeDataList.json",
+            url: url,
             success: function (response) {
-                $scope.viewSchemeData = [];
+                $scope.viewServiceData = [];
                 for (let i in response) {
                     let data = response[i];
-                    data["schemeId"] = i;
-                    $scope.viewSchemeData.push(data);
+                    data["serviceId"] = i;
+                    $scope.viewServiceData.push(data);
                 }
                 $scope.$apply();
             }, error: function (error) {
@@ -89,357 +96,411 @@ app.controller('myCtrl', function ($scope, $http) {
             }
         });
     }
-    $scope.editSchemeDetails = function (event, details) {
+    $scope.editServiceDetails = function (event, details) {
         const isChecked = event.target.checked;
         $(".edit-check-cls").prop("checked", false);
         $(event.target).prop("checked", isChecked);
-        $scope.schemeData = { ...details };
+        $scope.serviceData = { ...details };
         if (!isChecked) {
-            $scope.schemeData = {};
-            $("#startDate").val("");
-            $("#endDate").val("");
+            $scope.serviceData = {};
             $scope.isEdit = false;
         } else {
             $scope.isEdit = true;
-            $scope.schemeData.schemeName = details.schemeName;
-            $scope.schemeData.anualIncome = details.anualIncome;
-            $scope.schemeData.minimumAge = details.minimumAge;
-            $scope.schemeData.maximumAge = details.maximumAge;
-            $scope.schemeData.startDate = details.startDate;
-            $scope.schemeData.endDate = details.endDate;
-            $scope.schemeData.applicableFor = details.applicableFor;
-            $scope.schemeData.description = details.description;
-            $("#startDate").val(details.startDate);
-            $("#endDate").val(details.startDate);
+            $scope.serviceData.serviceName = details.serviceName;
+            $scope.serviceData.serviceCharges = details.serviceCharges;
+            $scope.serviceData.serviceType = details.serviceType;
+            $scope.serviceData.description = details.description;
 
         }
     }
-    $scope.removeScheme = function (data) {
-
+    $scope.isAddService = function (isAdd) {
+        $scope.isEdit = !isAdd;
+    }
+    $scope.removeService = function () {
         $.ajax({
             type: 'delete',
             contentType: "application/json",
             dataType: 'json',
             cache: false,
-            url: URL + '/schemeDataList/' + data.schemeId + '.json',
-            data: JSON.stringify($scope.schemeData),
+            url: URL + '/serviceDataList/' + $scope.currentUserDetails.userId + '/' + $scope.serviceData.serviceId + '.json',
+            data: JSON.stringify($scope.serviceData),
             success: function (response) {
-                getSchemeDetailsData();
-                alert("operation completed sucessfully!!!");
-                $scope.schemeData = {};
+                $scope.gtServiceDetailsData('ADMIN');
+                alert("Removed sucessfully!!!");
+                $scope.serviceData = {};
             }, error: function (error) {
                 alert("Something went wrong");
             }
         });
     }
-    $scope.checkEligible = function (data) {
-        $scope.selectedSchemeDetails = data;
-        $scope.isEligible = true;
-        if (($scope.currentUserDetails.incomeId < data.anualIncome) ||
-            (data.applicableFor != 'A' && data.applicableFor != $scope.currentUserDetails.gender) ||
-            ((data.minimumAge > $scope.currentUserDetails.dob) || ($scope.currentUserDetails.dob > data.maximumAge)) ||
-            (new Date(data.startDate).getTime() > new Date().getTime()) ||
-            (new Date().getTime() > new Date(data.endDate).getTime())) {
+    $scope.selectedApplyService = function (data) {
+        $('#startDate').attr('min', new Date().toISOString().split('T')[0]);
+        $('#endDate').attr('min', new Date().toISOString().split('T')[0]);
+        $scope.serviceData = data;
+    }
+    $scope.applyService = function () {
+        if (new Date($('#startDate').val()).getTime() > new Date($('#endDate').val()).getTime()) {
+            alert("End Service should be greater than Start Service")
 
-            $scope.isEligible = false;
-        }
-    }
-    $scope.viewIdProof = function (data) {
-        $scope.imgBase64Data = data.idProof;
-    }
-    $scope.applyScheme = function () {
-        if (checkIsNull($scope.idProofDoc)) {
-            alert("Please upload your id proof");
-            return false;
-        }
-        let requestBody = {};
-        delete $scope.selectedSchemeDetails["$$hashKey"];
-        delete $scope.currentUserDetails["$$hashKey"];
-        requestBody['idProof'] = $scope.idProofDoc;
-        requestBody['schemeData'] = $scope.selectedSchemeDetails;
-        requestBody['userData'] = $scope.currentUserDetails;
-        requestBody['requestStatus'] = 'Pending';
-        requestBody['comment'] = '';
-        $.ajax({
-            type: 'post',
-            contentType: "application/json",
-            dataType: 'json',
-            cache: false,
-            url: URL + "/applyScheme/" + $scope.currentUserDetails.userId + ".json",
-            data: JSON.stringify(requestBody),
-            success: function (response) {
-                $("#eligibleModelId").modal('hide');
-                $scope.switchMenu('VIEW-PENDING-SCHEME', 'viewPendingSchemeTabId');
-                alert("Data submitted sucessfully!!!");
-            }, error: function (error) {
-                alert("Something went wrong");
-            }
-        });
-    }
+        } else if (checkIsNull($('#startDate').val()) || checkIsNull($('#endDate').val())) {
+            alert("Please select date");
 
-    function getAppliedSchemeList() {
-        let http_url = URL + "/applyScheme/.json";
-        if ($scope.loginUserType != 'COMPANY') {
-            http_url = URL + "/applyScheme/" + $scope.currentUserDetails.userId + ".json";
-        }
-        $scope.viewAppliedSchemeData = [];
-        $.ajax({
-            type: 'get',
-            contentType: "application/json",
-            dataType: 'json',
-            cache: false,
-            url: http_url,
-            success: function (response) {
-                $scope.viewAppliedSchemeData = [];
-                $scope.viewSchemeSubscriber = [];
-                if ($scope.loginUserType != 'COMPANY') {
-                    for (let i in response) {
-                        let data = response[i];
-                        data["appliedSchemeId"] = i;
-                        $scope.viewAppliedSchemeData.push(data);
-                    }
-                } else {
-                    let viewAppliedSchemeData = [];
-                    for (let i in response) {
-                        for (let j in response[i]) {
-                            let rdata = response[i][j];
-                            rdata["appliedSchemeId"] = j;
-                            viewAppliedSchemeData.push(rdata);
-                        }
-
-                    }
-                    $scope.viewAppliedSchemeData = viewAppliedSchemeData.filter((obj) => obj.requestStatus === 'Pending');
-                    $scope.viewSchemeSubscriber = viewAppliedSchemeData.filter((obj) => obj.requestStatus === 'Accepted');
-                    $scope.getSchemeSubscriberList();
-                }
-                $scope.$apply();
-            }, error: function (error) {
-                alert("Something went wrong");
-            }
-        });
-    }
-    $scope.schemeAppliedData = function (data) {
-        $("#commentId").val('');
-        $scope.schemeAppliedData = data;
-    }
-    $scope.acceptRejectScheme = function (type, data) {
-        let requestBody = {};
-        if (type == 'Unsubscribed') {
-            requestBody['requestStatus'] = 'Unsubscribed';
-            $scope.schemeAppliedData = data;
         } else {
-
-            if (checkIsNull($("#commentId").val())) {
-                alert("Please add comment");
-                return false;
-            }
-            if (type === 'ACCEPT') {
-                requestBody['requestStatus'] = 'Accepted';
-            } else {
-
-                requestBody['requestStatus'] = 'Rejected';
-                requestBody['comment'] = $("#commentId").val();
-            }
-        }
-
-        $.ajax({
-            type: 'patch',
-            contentType: "application/json",
-            dataType: 'json',
-            cache: false,
-            url: URL + "/applyScheme/" + $scope.schemeAppliedData.userData.userId + "/" + $scope.schemeAppliedData.appliedSchemeId + ".json",
-            data: JSON.stringify(requestBody),
-            success: function (response) {
-                $('#acceptRejectlId').modal('hide');
-                getAppliedSchemeList();
-                addNotification(type);
-                alert("Data submitted sucessfully!!!");
-            }, error: function (error) {
-                alert("Something went wrong");
-            }
-        });
-    }
-    function addNotification(type) {
-
-        let requestBody = {};
-        requestBody['hasViewed'] = false;
-        requestBody['schemeName'] = $scope.schemeAppliedData.schemeData.schemeName;
-        requestBody['comment'] = $("#commentId").val();
-        if (type === 'ACCEPT') {
-            requestBody['requestStatus'] = 'Accepted';
-        } else if (type == 'Unsubscribed') {
-            requestBody['requestStatus'] = 'Unsubscribed';
-        } else {
-            requestBody['requestStatus'] = 'Rejected';
-        }
-
-        $.ajax({
-            type: 'post',
-            contentType: "application/json",
-            dataType: 'json',
-            cache: false,
-            url: URL + "/notification/" + $scope.schemeAppliedData.userData.userId + ".json",
-            data: JSON.stringify(requestBody),
-            success: function (response) {
-            }, error: function (error) {
-                alert("Something went wrong");
-            }
-        });
-    }
-    $scope.dismissNotification = function (data) {
-        let requestBody = {};
-        requestBody['hasViewed'] = true;
-        $.ajax({
-            type: 'patch',
-            contentType: "application/json",
-            dataType: 'json',
-            cache: false,
-            url: URL + "/notification/" + $scope.currentUserDetails.userId + "/" + data.notificationId + ".json",
-            data: JSON.stringify(requestBody),
-            success: function (response) {
-                getNotication();
-            }, error: function (error) {
-                alert("Something went wrong");
-            }
-        });
-    }
-    function getNotication() {
-        $scope.notificationCount = 0;
-        const http_url = URL + "/notification/" + $scope.currentUserDetails.userId + ".json";
-        $scope.viewNotificationData = [];
-        $.ajax({
-            type: 'get',
-            contentType: "application/json",
-            dataType: 'json',
-            cache: false,
-            url: http_url,
-            success: function (response) {
-                let viewNotificationData = [];
-                for (let i in response) {
-                    let data = response[i];
-                    data["notificationId"] = i;
-                    viewNotificationData.push(data);
-                }
-                $scope.viewNotificationData = viewNotificationData.filter(obj => !obj.hasViewed);
-                $scope.notificationCount = $scope.viewNotificationData.length;
-                $scope.$apply();
-            }, error: function (error) {
-                alert("Something went wrong");
-            }
-        });
-    }
-    $scope.logout = function () {
-        localStorage.removeItem("userId");
-        localStorage.removeItem("userData");
-        localStorage.clear();
-        window.location.href = "itServiceProviderLogin.html";
-    }
-    $scope.setProfileDat = function () {
-        $("#userNameId").val($scope.currentUserDetails.userName);
-        $("#dobId").val($scope.currentUserDetails.dob);
-        $("#userEmailId").val($scope.currentUserDetails.emailId);
-        $("#passwordId").val($scope.currentUserDetails.password);
-        $("#contactId").val($scope.currentUserDetails.contactNum);
-        $("input[name=genderRadio][value=" + $scope.currentUserDetails.gender + "]").attr('checked', 'checked');
-        $("#incomeId").val($scope.currentUserDetails.incomeId);
-        $("#addressId").val($scope.currentUserDetails.addressId);
-    }
-    $scope.profileUpdate = function () {
-
-        if (checkIsNull($("#userNameId").val()) || checkIsNull($("#dobId").val()) || checkIsNull($("#userEmailId").val())
-            || checkIsNull($("#passwordId").val()) || checkIsNull($("#contactId").val()) || checkIsNull($("input[name='genderRadio']:checked").val())
-            || checkIsNull($("#incomeId").val())) {
-            alert("Please fill all the required data");
-        } else {
-            let requestBody = {
-                "userName": $("#userNameId").val(),
-                "dob": $("#dobId").val(),
-                "dojId": $("#dojId").val(),
-                "emailId": $("#userEmailId").val(),
-                "password": $("#passwordId").val(),
-                "contactNum": $("#contactId").val(),
-                "incomeId": $("#incomeId").val(),
-                "addressId": $("#addressId").val(),
-                "gender": $("input[name='genderRadio']:checked").val()
-            }
+            const oneDay = 24 * 60 * 60 * 1000; // hours*minutes*seconds*milliseconds
+            const firstDate = new Date($('#startDate').val());
+            const secondDate = new Date($('#endDate').val());
+            const diffDays = Math.round(Math.abs((firstDate - secondDate) / oneDay)) + 1;
+            const totalCost = ($scope.serviceData.serviceCharges / 30) * diffDays;
+            $("#costId").val(totalCost);
+            let requestBody = {};
+            delete $scope.currentUserDetails["$$hashKey"];
+            delete $scope.selectedComapnyDetails["$$hashKey"];
+            delete $scope.serviceData["$$hashKey"];
+            requestBody['companyData'] = $scope.selectedComapnyDetails;
+            requestBody['userData'] = $scope.currentUserDetails;
+            requestBody['requestStatus'] = 'Pending';
+            requestBody['cost'] = $("#costId").val();
+            requestBody['serviceData'] = $scope.serviceData;
             $.ajax({
-                type: 'patch',
+                type: 'post',
                 contentType: "application/json",
                 dataType: 'json',
                 cache: false,
-                cache: false,
-                url: URL + "/citizenRegister/" + $scope.currentUserDetails.userId + ".json",
+                url: URL + "/applyService/" + $scope.currentUserDetails.userId + ".json",
                 data: JSON.stringify(requestBody),
-                success: function (lresponse) {
-                    const userId = $scope.currentUserDetails.userId;
-                    $scope.currentUserDetails = { ...requestBody };
-                    $scope.currentUserDetails['userId'] = userId;
-                    delete $scope.currentUserDetails['$$hashKey'];
-                    localStorage.setItem("userDetails", JSON.stringify($scope.currentUserDetails));
-                    $('#updateProfileId').modal('hide');
-                    alert("Profile data updated sucessfully!!!");
+                success: function (response) {
+                    $("#applyServiceModalId").modal('hide');
+                    $scope.switchMenu('VIEW-APPLICANT', 'viewApplicantTabId')
+                    alert("Data submitted sucessfully!!!");
                 }, error: function (error) {
                     alert("Something went wrong");
                 }
             });
         }
     }
-    $scope.downloadPdf = function (id, fileName) {
-        let divId = '#' + id;
-        var doc = new jsPDF();
-        var specialElementHandlers = {
-            divId: function (element, renderer) {
-                return true;
+    function getAppliedServicesData() {
+        let http_url = URL + "/applyService/.json";
+        if ($scope.loginUserType != 'COMPANY') {
+            http_url = URL + "/applyService/" + $scope.currentUserDetails.userId + ".json";
+        }
+        $scope.viewAppliedServiceData = [];
+        $.ajax({
+            type: 'get',
+            contentType: "application/json",
+            dataType: 'json',
+            cache: false,
+            url: http_url,
+            success: function (response) {
+                $scope.viewAppliedServiceData = [];
+                $scope.viewAppliedServiceSummeryData = [];
+                if ($scope.loginUserType != 'COMPANY') {
+                    for (let i in response) {
+                        let data = response[i];
+                        data["appliedserviceId"] = i;
+                        $scope.viewAppliedServiceData.push(data);
+                    }
+                } else {
+                    let viewAppliedServiceData = [];
+                    let viewAppliedServiceSummeryData = [];
+                    for (let i in response) {
+                        for (let j in response[i]) {
+                            let rdata = response[i][j];
+                            rdata["appliedserviceId"] = j;
+                            viewAppliedServiceData.push(rdata);
+                        }
+
+                    }
+                    $scope.viewAppliedServiceData = viewAppliedServiceData.filter((obj) => obj.companyData.userId === $scope.currentUserDetails.userId);
+                    viewAppliedServiceSummeryData = [...$scope.viewAppliedServiceData];
+                    viewAppliedServiceSummeryData.forEach((obj) => {
+                        if ((new Date(obj.serviceData.startDate).getTime() < new Date().getTime()) &&
+                            (new Date(obj.serviceData.endDate).getTime() > new Date().getTime())) {
+                            obj["subscribeStatus"] = "Active";
+
+                        } else if ((new Date(obj.serviceData.startDate).getTime() > new Date().getTime())) {
+                            obj["subscribeStatus"] = "Upcomming";
+
+                        } else if (new Date(obj.serviceData.endDate).getTime() < new Date().getTime()) {
+                            obj["subscribeStatus"] = "Expired";
+                        }
+                    })
+                    $scope.viewAppliedServiceSummeryData = [...viewAppliedServiceSummeryData];
+                    $scope.viewAppliedServiceSummeryFilterData = $scope.viewAppliedServiceSummeryFilterData = $scope.viewAppliedServiceSummeryData.filter(obj => obj.requestStatus == "Payment Completed");
+                    // $scope.viewServiceSubscriber = viewAppliedServiceData.filter((obj) => obj.requestStatus === 'Accepted');
+                    // $scope.getServiceSubscriberList();
+                }
+                $scope.$apply();
+            }, error: function (error) {
+                alert("Something went wrong");
             }
-        };
-        var doc = new jsPDF();
-        doc.fromHTML(
-            $(divId).html(), 15, 15,
-            { 'width': 170, 'elementHandlers': specialElementHandlers },
-            function () { doc.save(fileName + '.pdf'); }
-        );
+        });
     }
-    $scope.getSchemeSubscriberList = function () {
+    $scope.askQuestions = function (data, index) {
+        if (checkIsNull($("#questionBoxId-" + index).val())) {
+            alert("Please enter your question");
+        } else {
+            let requestBody = {};
+            delete $scope.currentUserDetails["$$hashKey"];
+            delete data["$$hashKey"];
+            requestBody["customerDetails"] = $scope.currentUserDetails;
+            requestBody["question"] = $("#questionBoxId-" + index).val();
+            requestBody["companyDetails"] = data;
+            requestBody["answer"] = "";
+
+            $.ajax({
+                type: 'post',
+                contentType: "application/json",
+                dataType: 'json',
+                cache: false,
+                url: URL + '/questionsAnswerList.json',
+                data: JSON.stringify(requestBody),
+                success: function (response) {
+                    $("#questionBoxId-" + index).val('');
+                    $scope.getQuestionAnsData();
+                    alert("Question has posted!!!");
+                }, error: function (error) {
+                    alert("Something went wrong");
+                }
+            });
+        }
+    }
+    $scope.answerUpdate = function (data, index) {
+        if (checkIsNull($("#answerBoxId-" + index).val())) {
+            alert("Please enter your question");
+        } else {
+            let requestBody = {};
+            requestBody["answer"] = $("#answerBoxId-" + index).val();
+
+            $.ajax({
+                type: 'patch',
+                contentType: "application/json",
+                dataType: 'json',
+                cache: false,
+                url: URL + '/questionsAnswerList/' + data.queriesId + '/.json',
+                data: JSON.stringify(requestBody),
+                success: function (response) {
+                    $("#answerBoxId-" + index).val('');
+                    $scope.getQuestionAnsData();
+                    alert("Answer has posted!!!");
+                }, error: function (error) {
+                    alert("Something went wrong");
+                }
+            });
+        }
+    }
+    $scope.getQuestionAnsData = function () {
+        $scope.queriesList = [];
+        $.ajax({
+            type: 'get',
+            contentType: "application/json",
+            dataType: 'json',
+            cache: false,
+            url: URL + "/questionsAnswerList.json",
+            success: function (response) {
+                let queriesList = [];
+                for (let i in response) {
+                    let data = response[i];
+                    data["queriesId"] = i;
+                    queriesList.push(data);
+                }
+                if ($scope.loginUserType == 'COMPANY') {
+                    $scope.queriesList = queriesList.filter(obj => obj.companyDetails.userId === $scope.currentUserDetails.userId);
+                } else {
+                    $scope.queriesList = queriesList.filter(obj => obj.customerDetails.userId === $scope.currentUserDetails.userId);
+                }
+                $scope.$apply();
+            }, error: function (error) {
+                alert("Something went wrong");
+            }
+        });
+    }
+    $scope.feedBack = function (data, index) {
+        if (checkIsNull($("#feedbackBoxId-" + index).val())) {
+            alert("Please enter your comment");
+        } else {
+            let requestBody = {};
+            delete data["$$hashKey"];
+            requestBody["feedback"] = $("#feedbackBoxId-" + index).val();
+            requestBody["rating"] = $("#ratingId-" + index).val();
+            requestBody["details"] = data;
+
+            $.ajax({
+                type: 'post',
+                contentType: "application/json",
+                dataType: 'json',
+                cache: false,
+                url: URL + '/feedBackList.json',
+                data: JSON.stringify(requestBody),
+                success: function (response) {
+                    $("#questionBoxId-" + index).val('');
+                    $scope.getQuestionAnsData();
+                    alert("Feedback has posted!!!");
+                }, error: function (error) {
+                    alert("Something went wrong");
+                }
+            });
+        }
+    }
+
+    function getFeedBackData() {
+        $scope.feedBackList = [];
+        $.ajax({
+            type: 'get',
+            contentType: "application/json",
+            dataType: 'json',
+            cache: false,
+            url: URL + "/feedBackList.json",
+            success: function (response) {
+                let feedBackList = [];
+                for (let i in response) {
+                    let data = response[i];
+                    data["feedBackId"] = i;
+                    feedBackList.push(data);
+                }
+                if ($scope.loginUserType == 'COMPANY') {
+                    $scope.feedBackList = feedBackList.filter(obj => obj.details.companyDetails.userId === $scope.currentUserDetails.userId);
+                } else {
+                    $scope.feedBackList = [...feedBackList];
+                }
+                $scope.$apply();
+            }, error: function (error) {
+                alert("Something went wrong");
+            }
+        });
+    }
+
+    $scope.viewServices = function (data) {
+        $scope.selectedCompanyDetails = data;
+    }
+    function getCompanyList() {
+        $scope.companyList = [];
+        $.ajax({
+            type: 'get',
+            contentType: "application/json",
+            dataType: 'json',
+            cache: false,
+            url: URL + "/itServiceRegister.json",
+            success: function (response) {
+                let loginUserList = [];
+                for (let i in response) {
+                    let data = response[i];
+                    data["userId"] = i;
+                    loginUserList.push(data);
+                }
+                $scope.companyList = loginUserList.filter(obj => obj.userType === 'Company');
+                $scope.$apply();
+            }, error: function (error) {
+                alert("Something went wrong");
+            }
+        });
+
+    }
+
+    $scope.acceptRejectPayment = function (data, type) {
+        let requestBody = {};
+        if (type === 'ACCEPT') {
+            requestBody['requestStatus'] = 'Accepted';
+        } else if (type == 'PAY') {
+            requestBody['requestStatus'] = 'Payment Completed'
+        } else {
+
+            requestBody['requestStatus'] = 'Rejected';
+        }
+
+        $.ajax({
+            type: 'patch',
+            contentType: "application/json",
+            dataType: 'json',
+            cache: false,
+            url: URL + "/applyService/" + data.userData.userId + "/" + data.appliedserviceId + ".json",
+            data: JSON.stringify(requestBody),
+            success: function (response) {
+                getAppliedServicesData();
+                alert("Data submitted sucessfully!!!");
+            }, error: function (error) {
+                alert("Something went wrong");
+            }
+        });
+    }
+
+
+
+    $scope.logout = function () {
+        localStorage.removeItem("userId");
+        localStorage.removeItem("userData");
+        localStorage.clear();
+        window.location.href = "itServiceProviderLogin.html";
+    }
+
+    $scope.getServiceSubscriberList = function () {
         $scope.schemeSubscriber = [];
         $scope.viewSchemeData.forEach(element => {
             let schemeSubData = {};
             schemeSubData["details"] = [];
             schemeSubData["schemeName"] = element.schemeName;
-            schemeSubData["details"] = $scope.viewSchemeSubscriber.filter(obj => obj.schemeData.schemeId === element.schemeId);
+            schemeSubData["details"] = $scope.viewServiceSubscriber.filter(obj => obj.schemeData.serviceId === element.serviceId);
             $scope.schemeSubscriber.push(schemeSubData);
         });
         console.log($scope.schemeSubscriber);
     }
+    $scope.filter = function (modelValue) {
+        $scope.viewAppliedServiceSummeryFilterData = [];
+        if (modelValue == 'ALL') {
+            $scope.viewAppliedServiceSummeryFilterData = $scope.viewAppliedServiceSummeryData.filter(obj => obj.requestStatus == "Payment Completed");
+        } else if (modelValue == 'ACTIVE') {
+            $scope.viewAppliedServiceSummeryFilterData = $scope.viewAppliedServiceSummeryData.filter(obj => obj.subscribeStatus == 'Active' && obj.requestStatus == "Payment Completed");
 
+        } else if (modelValue == 'EXPIRED') {
+            $scope.viewAppliedServiceSummeryFilterData = $scope.viewAppliedServiceSummeryData.filter(obj => obj.subscribeStatus == 'Expired' && obj.requestStatus == "Payment Completed");
+
+        } else if (modelValue == 'UPCOMMING') {
+            $scope.viewAppliedServiceSummeryFilterData = $scope.viewAppliedServiceSummeryData.filter(obj => obj.subscribeStatus == 'Upcomming' && obj.requestStatus == "Payment Completed");
+
+        }
+    }
     $scope.switchMenu = function (type, id) {
         $(".menuCls").removeClass("active");
         $('#' + id).addClass("active");
-        $("#appliedSchemeDiv").hide();
-        $("#schemeDetailsDiv").hide();
-        $("#schemeSubscriberDiv").hide();
-        if (type == "VIEW-PENDING-SCHEME") {
-            getAppliedSchemeList();
-            //$("#appliedSchemeDiv").show();
+        $("#viewCompanyDiv").hide();
+        $("#serviceDetailsDiv").hide();
+        $("#comunicationDivId").hide();
+        $("#appliedServiceDiv").hide();
+        $("#feedBackDivId").hide();
+        $("#applicationsDiv").hide();
+        $("#viewServiceSummaryDiv").hide();
 
-        } else if (type == "VIEW-SCHEME") {
-            $scope.schemeData = {};
-            //$("#schemeDetailsDiv").show();
-            getSchemeDetailsData();
+        if (type == "SERVICE") {
+            $("#serviceDetailsDiv").show();
+            $scope.gtServiceDetailsData('ADMIN');
 
-        } else if (type == "VIEW-SCHEME-SUBSCRIBER") {
-            getAppliedSchemeList();
-            //$("#schemeSubscriberDiv").show();
+        } else if (type === "VIEW-COMPANY") {
+            getCompanyList();
+            $("#appliedServiceDiv").show();
+        }
+        else if (type == "COMMUNICATION") {
+            $scope.getQuestionAnsData();
+            $("#comunicationDivId").show();
+
+        } else if (type == "VIEW-FEED-BACK") {
+            getFeedBackData();
+            $scope.getQuestionAnsData();
+            $("#feedBackDivId").show();
+
+        } else if (type == 'VIEW-APPLICANT') {
+            getAppliedServicesData();
+            $("#applicationsDiv").show();
+
+        } else if (type === 'VIEW-SERVICE-SUMMARY') {
+            $scope.search = "ALL";
+            getAppliedServicesData();
+            $("#viewServiceSummaryDiv").show();
         }
     }
     $(document).ready(function () {
-        $('#idProofDoc').on('change', function () {
-            var fileReader = new FileReader();
-            fileReader.onload = function () {
-                $scope.idProofDoc = fileReader.result;  // data <-- in this var you have the file data in Base64 format
-            };
-            fileReader.readAsDataURL($('#idProofDoc').prop('files')[0]);
-            var file = $('#idProofDoc')[0].files[0].name;
-            $(this).next('.custom-file-label').html(file);
-        });
+        $('#serviceAddEditModelId').on('hidden.bs.modal', function (e) {
+            $scope.isEdit = false;
+            $(".edit-check-cls").prop("checked", false);
+        })
+
     });
 });
