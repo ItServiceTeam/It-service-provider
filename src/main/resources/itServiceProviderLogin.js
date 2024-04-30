@@ -156,6 +156,7 @@ $(document).ready(function () {
         } else if (this.value === "Company") {
             $("#companyDivId").show();
             $("#customerDivId").hide();
+            // customerDiv will hide when value is not company
         }
     });
 })
