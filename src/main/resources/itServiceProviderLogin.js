@@ -44,6 +44,7 @@ function loginUser() {
 
             }, error: function (error) {
                 alert("Something went wrong");
+                // works when something goes wrong
             }
         });
     }
